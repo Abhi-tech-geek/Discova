@@ -1,0 +1,61 @@
+{
+  "expo": {
+    "name": "Discova",
+    "slug": "Discova",
+    "scheme": "discova",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "ios": {
+      "supportsTablet": true,
+      "infoPlist": {
+        "NSCameraUsageDescription": "Discova needs the camera to capture accessibility photos.",
+        "NSPhotoLibraryUsageDescription": "Discova needs photo access to let you pick existing photos to share.",
+        "NSLocationWhenInUseUsageDescription": "Discova uses your location to find nearby accessible places."
+      }
+    },
+    "android": {
+      "package": "com.discova.app",
+      "versionCode": 10,
+      "adaptiveIcon": {
+        "backgroundColor": "#2E6BFF",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      },
+      "predictiveBackGestureEnabled": false,
+      "permissions": [
+        "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO",
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.WRITE_EXTERNAL_STORAGE",
+        "android.permission.ACCESS_FINE_LOCATION",
+        "android.permission.ACCESS_COARSE_LOCATION"
+      ]
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      "expo-secure-store",
+      "expo-router",
+      "expo-camera",
+      "expo-image-picker",
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "Allow Discova to use your location to find nearby accessible places."
+        }
+      ],
+      "expo-font"
+    ],
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "5a0ec723-f112-4eb3-8054-cc77c418566a"
+      }
+    },
+    "owner": "abhinavai9900"
+  }
+}

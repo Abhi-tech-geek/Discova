@@ -1,0 +1,127 @@
+rules_version = '2';
+
+// DISCOVA Firestore security rules.
+//
+// HOW TO USE:
+//   Firebase Console → Firestore Database → Rules tab → paste this whole file
+//   (replace everything) → Publish. Takes ~1 min to go live.
+//
+// Model: DEFAULT DENY. Nothing is allowed unless a rule below permits it.
+// This is an MVP / client-only ruleset: it lets the app work end-to-end
+// (incl. reviews + coin rewards) while still scoping writes to the signed-in
+// user. For production, move coin/stat mutations into Cloud Functions and
+// remove 'coins'/'level'/'stats'/'badges' from the user self-update list.
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ---- HELPERS ----
+    function isSignedIn() {
+      return request.auth != null;
+    }
+    function isOwner(uid) {
+      return isSignedIn() && request.auth.uid == uid;
+    }
+    function isAuthor() {
+      return isSignedIn() && request.auth.uid == resource.data.userId;
+    }
+    function isCreatingOwn() {
+      return isSignedIn() && request.auth.uid == request.resource.data.userId;
+    }
+    function onlyChanged(allowedFields) {
+      return request.resource.data.diff(resource.data).affectedKeys()
+        .hasOnly(allowedFields);
+    }
+
+    // ---- USERS ----
+    match /users/{uid} {
+      allow read: if isSignedIn();
+      allow create: if isOwner(uid) && request.resource.data.uid == uid;
+      // NOTE: 'coins','level','stats','badges' included so client-side coin
+      // rewards (review/post creation) work in the MVP. Harden later via
+      // Cloud Functions.
+      allow update: if isOwner(uid)
+                    && onlyChanged([
+                         'displayName', 'photoURL', 'bio', 'location',
+                         'disabilityType', 'pwdMode', 'preferences',
+                         'lastActiveDate', 'coins', 'level', 'stats', 'badges'
+                       ]);
+      allow delete: if false;
+    }
+
+    // ---- POSTS ----
+    match /posts/{postId} {
+      allow read: if isSignedIn();
+      allow create: if isCreatingOwn();
+      allow update: if (isAuthor()
+                        && onlyChanged(['caption', 'aiCaption', 'accessibilityTags']))
+                    || (isSignedIn()
+                        && onlyChanged(['likes', 'commentsCount']));
+      allow delete: if isAuthor();
+
+      match /likes/{userId} {
+        allow read: if isSignedIn();
+        allow create, delete: if isOwner(userId);
+        allow update: if false;
+      }
+    }
+
+    // ---- PLACES (public catalog + shared accessibility cache) ----
+    match /places/{placeId} {
+      allow read: if true;
+      allow create: if isSignedIn();
+      allow update: if isSignedIn()
+                    && onlyChanged([
+                         'accessibilityScores', 'aiAnalysis',
+                         'rating', 'totalReviews', 'updatedAt'
+                       ]);
+      allow delete: if false;
+    }
+
+    // ---- STORIES (24h) ----
+    match /stories/{storyId} {
+      allow read: if isSignedIn();
+      allow create: if isCreatingOwn();
+      allow update: if false;
+      allow delete: if isAuthor();
+    }
+
+    // ---- REVIEWS (accessibility review form writes here) ----
+    match /reviews/{reviewId} {
+      allow read: if isSignedIn();
+      allow create: if isCreatingOwn()
+                    && request.resource.data.rating >= 1
+                    && request.resource.data.rating <= 5;
+      allow update: if (isAuthor()
+                        && onlyChanged(['text', 'rating', 'accessibilityRatings', 'photos']))
+                    || (isSignedIn()
+                        && onlyChanged(['helpfulCount']));
+      allow delete: if isAuthor();
+    }
+
+    // ---- COIN LEDGER (append-only) ----
+    match /coinTransactions/{id} {
+      allow read: if isSignedIn() && request.auth.uid == resource.data.userId;
+      allow create: if isCreatingOwn();
+      allow update, delete: if false;
+    }
+
+    // ---- REWARD REDEMPTIONS ----
+    match /redemptions/{id} {
+      allow read: if isSignedIn() && request.auth.uid == resource.data.userId;
+      allow create: if isCreatingOwn();
+      allow update, delete: if false;
+    }
+
+    // ---- REWARDS CATALOG (read-only) ----
+    match /rewards/{rewardId} {
+      allow read: if isSignedIn();
+      allow write: if false;
+    }
+
+    // ---- DEFAULT DENY ----
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
