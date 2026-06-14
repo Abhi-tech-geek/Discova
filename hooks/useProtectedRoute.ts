@@ -38,9 +38,12 @@ export function useProtectedRoute(): { isAuthenticated: boolean; isLoading: bool
     if (isLoading) return;
 
     const inAuthGroup = segments[0] === 'auth';
+    // Onboarding is intentionally reachable while signed in — fresh signups
+    // land there to fill name/DOB/gender. Never bounce away from it.
+    const inOnboarding = inAuthGroup && (segments as string[])[1] === 'onboarding';
     if (!isAuthenticated && !inAuthGroup) {
       router.replace('/auth/login');
-    } else if (isAuthenticated && inAuthGroup) {
+    } else if (isAuthenticated && inAuthGroup && !inOnboarding) {
       router.replace('/(tabs)');
     }
   }, [isMounted, isAuthenticated, isLoading, segments, router, navigationState?.key]);

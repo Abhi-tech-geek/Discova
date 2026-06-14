@@ -17,7 +17,7 @@
     },
     "android": {
       "package": "com.discova.app",
-      "versionCode": 10,
+      "versionCode": 12,
       "adaptiveIcon": {
         "backgroundColor": "#2E6BFF",
         "foregroundImage": "./assets/android-icon-foreground.png",
@@ -25,6 +25,7 @@
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
       "predictiveBackGestureEnabled": false,
+      "softwareKeyboardLayoutMode": "resize",
       "permissions": [
         "android.permission.CAMERA",
         "android.permission.RECORD_AUDIO",

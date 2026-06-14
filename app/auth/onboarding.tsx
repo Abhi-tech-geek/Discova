@@ -24,6 +24,14 @@ import { createDemoUser, useUserStore } from '../../stores/userStore';
 import { sanitizeInput } from '../../utils/sanitize';
 import type { DisabilityType } from '../../types';
 
+type Gender = 'male' | 'female' | 'other';
+
+const GENDER_OPTIONS: Array<{ value: Gender; label: string; icon: keyof typeof MaterialCommunityIcons.glyphMap }> = [
+  { value: 'male', label: 'Male', icon: 'gender-male' },
+  { value: 'female', label: 'Female', icon: 'gender-female' },
+  { value: 'other', label: 'Other', icon: 'account' },
+];
+
 /** Auto-format digits into DD/MM/YYYY as the user types. */
 function formatDob(raw: string): string {
   const d = raw.replace(/\D/g, '').slice(0, 8);
@@ -135,6 +143,8 @@ function SlideView({
   setSurname,
   dob,
   setDob,
+  gender,
+  setGender,
 }: {
   slide: Slide;
   isPWD: boolean | null;
@@ -147,6 +157,8 @@ function SlideView({
   setSurname: (v: string) => void;
   dob: string;
   setDob: (v: string) => void;
+  gender: Gender | null;
+  setGender: (g: Gender) => void;
 }) {
   const isProfileSlide = slide.key === 'profile';
 
@@ -208,6 +220,36 @@ function SlideView({
             maxLength={10}
             className="mt-2 h-12 rounded-xl border border-border-light bg-surface-light px-3 text-sm text-gray-900 dark:border-border-dark dark:bg-surface-dark dark:text-white"
           />
+
+          {/* Gender */}
+          <View className="mt-2 flex-row" style={{ gap: 8 }}>
+            {GENDER_OPTIONS.map((g) => {
+              const selected = gender === g.value;
+              return (
+                <Pressable
+                  key={g.value}
+                  testID={`onboarding_gender_${g.value}`}
+                  onPress={() => setGender(g.value)}
+                  accessibilityRole="radio"
+                  accessibilityState={{ selected }}
+                  className={`h-12 flex-1 flex-row items-center justify-center rounded-xl border-2 ${
+                    selected
+                      ? 'border-primary bg-primary'
+                      : 'border-border-light bg-surface-light dark:border-border-dark dark:bg-surface-dark'
+                  }`}
+                >
+                  <MaterialCommunityIcons name={g.icon} size={15} color={selected ? '#FFFFFF' : '#6B7280'} />
+                  <Text
+                    className={`ml-1.5 text-sm font-semibold ${
+                      selected ? 'text-white' : 'text-gray-900 dark:text-white'
+                    }`}
+                  >
+                    {g.label}
+                  </Text>
+                </Pressable>
+              );
+            })}
+          </View>
 
           <Text className="mb-3 mt-6 text-center text-sm font-medium text-gray-700 dark:text-gray-200">
             Do you identify as a person with a disability?
@@ -325,6 +367,7 @@ export default function OnboardingScreen() {
   const [firstName, setFirstName] = useState('');
   const [surname, setSurname] = useState('');
   const [dob, setDob] = useState('');
+  const [gender, setGender] = useState<Gender | null>(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -352,6 +395,7 @@ export default function OnboardingScreen() {
           email: firebaseUser.email ?? 'guest@discova.app',
           ...(fullName.length > 0 ? { displayName: fullName } : {}),
           dob: isValidDob(dob) ? dob : '',
+          gender: gender ?? '',
           disabilityType,
           pwdMode,
           preferences,
@@ -371,6 +415,7 @@ export default function OnboardingScreen() {
           createDemoUser({
             ...(fullName.length > 0 ? { displayName: fullName } : {}),
             dob: isValidDob(dob) ? dob : '',
+            gender: gender ?? '',
             disabilityType,
             pwdMode,
             preferences,
@@ -378,7 +423,7 @@ export default function OnboardingScreen() {
         );
       }
     },
-    [updateUserStore, firstName, surname, dob],
+    [updateUserStore, firstName, surname, dob, gender],
   );
 
   /** Update the dot indicator as the FlatList scrolls. */
@@ -405,6 +450,10 @@ export default function OnboardingScreen() {
       setError('Date of birth looks invalid — use DD/MM/YYYY.');
       return;
     }
+    if (!gender) {
+      setError('Please select your gender.');
+      return;
+    }
     if (isPWD === null) {
       setError('Please answer the disability question to continue.');
       return;
@@ -425,7 +474,7 @@ export default function OnboardingScreen() {
     } finally {
       setSaving(false);
     }
-  }, [activeIndex, isPWD, selectedDisability, persistProfile, router]);
+  }, [activeIndex, isPWD, selectedDisability, firstName, dob, gender, persistProfile, router]);
 
   /** Skip onboarding — still create a real profile (disabilityType 'none'). */
   const handleSkip = useCallback(async () => {
@@ -451,9 +500,11 @@ export default function OnboardingScreen() {
         setSurname={setSurname}
         dob={dob}
         setDob={setDob}
+        gender={gender}
+        setGender={setGender}
       />
     ),
-    [isPWD, selectedDisability, firstName, surname, dob],
+    [isPWD, selectedDisability, firstName, surname, dob, gender],
   );
 
   const isLastSlide = activeIndex === SLIDES.length - 1;

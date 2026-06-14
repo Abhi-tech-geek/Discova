@@ -8,6 +8,21 @@ Most apps tell you *where* to go. Discova tells you whether you can actually **g
 
 ---
 
+## 📲 Download the app
+
+**[⬇️ Download Discova for Android (.apk)](https://github.com/Abhi-tech-geek/Discova/releases/latest/download/discova.apk)**
+
+[![Latest release](https://img.shields.io/github/v/release/Abhi-tech-geek/Discova?label=latest&color=2E6BFF)](https://github.com/Abhi-tech-geek/Discova/releases/latest)
+
+This link always serves the **newest** build:
+`https://github.com/Abhi-tech-geek/Discova/releases/latest/download/discova.apk`
+
+1. Tap the download link above on your Android phone
+2. Open the downloaded `discova.apk`
+3. Allow *Install from unknown sources* if prompted
+
+---
+
 ## ✨ What it does
 
 | Feature | Description |

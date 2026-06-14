@@ -85,6 +85,8 @@ export interface User {
   bio: string;
   /** Date of birth, "DD/MM/YYYY" (empty when not provided). */
   dob: string;
+  /** Gender ('' when not provided). */
+  gender: 'male' | 'female' | 'other' | '';
   location: string;
   disabilityType: DisabilityType;
   pwdMode: boolean;

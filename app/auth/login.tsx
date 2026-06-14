@@ -1,8 +1,17 @@
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
-import { useCallback, useState } from 'react';
-import { ActivityIndicator, Pressable, Text, TextInput, View } from 'react-native';
+import { useCallback, useRef, useState } from 'react';
+import {
+  ActivityIndicator,
+  KeyboardAvoidingView,
+  Platform,
+  Pressable,
+  ScrollView,
+  Text,
+  TextInput,
+  View,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 
@@ -91,6 +100,11 @@ function Field({
  */
 export default function LoginScreen() {
   const router = useRouter();
+  const scrollRef = useRef<ScrollView | null>(null);
+  /** Keep the focused input above the keyboard (edge-to-edge Android too). */
+  const scrollToForm = useCallback(() => {
+    setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 120);
+  }, []);
   const [mode, setMode] = useState<'signin' | 'signup'>('signin');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -153,7 +167,17 @@ export default function LoginScreen() {
         style={{ position: 'absolute', bottom: -60, right: -80, width: 360, height: 360, borderRadius: 360 }}
       />
 
-      <SafeAreaView style={{ flex: 1, justifyContent: 'space-between' }}>
+      <SafeAreaView style={{ flex: 1 }}>
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          style={{ flex: 1 }}
+        >
+        <ScrollView
+          ref={scrollRef}
+          contentContainerStyle={{ flexGrow: 1, justifyContent: 'space-between' }}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+        >
         {/* Brand + hero */}
         <View style={{ paddingHorizontal: 26, paddingTop: 12 }}>
           <Animated.View entering={FadeIn.duration(600)}>
@@ -250,6 +274,7 @@ export default function LoginScreen() {
                   keyboardType="email-address"
                   autoCapitalize="none"
                   autoCorrect={false}
+                  onFocus={scrollToForm}
                   accessibilityLabel="Email address"
                   style={{ flex: 1, marginLeft: 10, color: '#FFFFFF', fontSize: 15 }}
                 />
@@ -281,6 +306,7 @@ export default function LoginScreen() {
                   placeholderTextColor="rgba(255,255,255,0.5)"
                   secureTextEntry={!showPw}
                   autoCapitalize="none"
+                  onFocus={scrollToForm}
                   accessibilityLabel="Password"
                   onSubmitEditing={handleContinue}
                   style={{ flex: 1, marginLeft: 10, color: '#FFFFFF', fontSize: 15 }}
@@ -362,6 +388,8 @@ export default function LoginScreen() {
             </Text>
           </Animated.View>
         </View>
+        </ScrollView>
+        </KeyboardAvoidingView>
       </SafeAreaView>
     </View>
   );

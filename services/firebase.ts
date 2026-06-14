@@ -133,6 +133,7 @@ function parseUser(snap: DocumentSnapshot<DocumentData>): User | null {
     photoURL: data.photoURL ?? null,
     bio: data.bio ?? '',
     dob: data.dob ?? '',
+    gender: data.gender ?? '',
     location: data.location ?? '',
     disabilityType: data.disabilityType ?? 'none',
     pwdMode: Boolean(data.pwdMode),
@@ -403,7 +404,9 @@ export async function updateUserProfile(
   uid: string,
   data: Partial<Omit<User, 'uid' | 'joinedAt'>>,
 ): Promise<void> {
-  await setDoc(doc(db, 'users', uid), data, { merge: true });
+  // `uid` included so first-time merges (doc creation) pass the security
+  // rules' `request.resource.data.uid == uid` create check.
+  await setDoc(doc(db, 'users', uid), { ...data, uid }, { merge: true });
 }
 
 /**

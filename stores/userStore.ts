@@ -20,6 +20,7 @@ export function createDemoUser(overrides: Partial<User> = {}): User {
     photoURL: null,
     bio: '',
     dob: '',
+    gender: '',
     location: '',
     disabilityType: 'none',
     pwdMode: false,
